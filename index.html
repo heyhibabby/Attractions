@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Tourist Attractions · Smart Radius · 8 Directions</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #dce5ec; margin: 0; padding: 1.5rem; }
+        .wrapper { max-width: 1400px; margin: 0 auto; background: white; border-radius: 2rem; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2); overflow: hidden; }
+        .header { background: #0f3b2c; color: white; padding: 1.2rem 2rem; }
+        .header h1 { margin: 0; font-size: 1.6rem; }
+        .header p { margin: 0.3rem 0 0; opacity: 0.85; font-size: 0.82rem; }
+        .content { padding: 2rem; }
+        .panel { background: #f9fbfd; border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #e0e9ef; }
+        .flex-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+        .input-area { flex: 4; min-width: 220px; }
+        .radius-area { flex: 1; min-width: 140px; }
+        .btn-group { flex: 1.5; display: flex; gap: 0.7rem; flex-wrap: wrap; }
+        .category-row { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .cat-btn { background: #eef2f5; border: 1px solid #cbdbe6; padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.7rem; cursor: pointer; transition: 0.1s; white-space: nowrap; }
+        .cat-btn.active { background: #1f6e58; color: white; border-color: #1f6e58; }
+        .cat-btn:hover:not(.active) { background: #d8eae0; border-color: #1f6e58; }
+        label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #1f6e58; display: block; margin-bottom: 0.25rem; }
+        input, textarea { width: 100%; padding: 0.7rem 1rem; border: 1px solid #cbdbe6; border-radius: 1rem; font-size: 0.9rem; background: white; outline: none; }
+        input:focus, textarea:focus { border-color: #1f6e58; }
+        textarea { font-family: monospace; resize: vertical; }
+        button { background: #1f6e58; border: none; padding: 0.6rem 1.2rem; border-radius: 2rem; font-weight: 600; color: white; cursor: pointer; transition: 0.2s; font-size: 0.88rem; }
+        button:hover { background: #0d4d3c; transform: translateY(-1px); }
+        .btn-outline { background: #eef2f5; color: #1f6e58; border: 1px solid #cbdbe6; }
+        .btn-outline:hover { background: #d8eae0; }
+        .btn-excel { background: #1a7c3a; }
+        .btn-excel:hover { background: #115a29; }
+        .btn-clear { background: #e8f0fe; color: #555; border: 1px solid #cbdbe6; font-size: 1.1rem; padding: 0.55rem 0.85rem; line-height: 1; }
+        .btn-clear:hover { background: #fde8e8; color: #c00; border-color: #f5b8b8; transform: none; box-shadow: none; }
+        .input-wrap { position: relative; display: flex; align-items: flex-start; gap: 0.4rem; }
+        .input-wrap textarea { flex: 1; }
+        .status { background: #eef3fc; padding: 0.8rem 1rem; border-radius: 1rem; margin-top: 1rem; border-left: 4px solid #1f6e58; font-size: 0.85rem; }
+        .status.error { background: #ffe6e5; border-left-color: #c72a2a; color: #b00; }
+        .status.warn  { background: #fff8e1; border-left-color: #f59e0b; color: #7c4f00; }
+        .loader { display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #1f6e58; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .export-bar { background: #f0f9f4; border: 1px solid #b8ddc8; border-radius: 1rem; padding: 0.9rem 1.2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.7rem; }
+        .export-info { font-size: 0.82rem; color: #2a5c40; }
+        .export-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+        .compass-section { margin-bottom: 2rem; background: white; border-radius: 1.2rem; border: 1px solid #e2edf2; overflow: hidden; }
+        .compass-header { background: #eef3f0; padding: 0.7rem 1.2rem; font-weight: 700; font-size: 1rem; border-bottom: 2px solid #cde0d8; display: flex; align-items: center; justify-content: space-between; }
+        .compass-header-left { display: flex; align-items: center; gap: 8px; }
+        .compass-badge { background: #1f6e58; color: white; border-radius: 40px; padding: 0.15rem 0.7rem; font-size: 0.7rem; }
+        .attraction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; padding: 1rem; }
+
+        .card { background: white; border-radius: 1rem; border: 1px solid #e4eef3; overflow: hidden; transition: 0.15s; display: flex; flex-direction: column; }
+        .card:hover { box-shadow: 0 8px 18px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .card-img { height: 130px; background: #f0f5f8; display: flex; align-items: center; justify-content: center; color: #8ba3ae; font-size: 0.75rem; position: relative; overflow: hidden; flex-shrink: 0; }
+        .card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .cat-pill { position: absolute; top: 6px; right: 6px; background: rgba(15,59,44,0.82); color: white; font-size: 0.58rem; font-weight: 700; padding: 0.18rem 0.5rem; border-radius: 50px; }
+        .card-body { padding: 0.8rem 1rem; flex: 1; display: flex; flex-direction: column; }
+        .place-name {
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            font-size: 0.88rem;
+            color: #0f3b2c;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            line-height: 1.4;
+        }
+        .meta-info { font-size: 0.68rem; color: #5f7c8c; display: flex; gap: 0.6rem; margin: 0.35rem 0 0.6rem; flex-wrap: wrap; }
+        .meta-chip { background: #f0f5f8; padding: 0.15rem 0.45rem; border-radius: 50px; border: 1px solid #dde8ee; }
+        .map-links { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: auto; padding-top: 0.5rem; }
+        .map-btn { display: inline-block; padding: 0.25rem 0.65rem; border-radius: 2rem; font-size: 0.65rem; font-weight: 600; text-decoration: none; transition: 0.1s; white-space: nowrap; }
+        .map-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        .map-google { background: #4285f4; color: white; }
+        .map-apple  { background: #222; color: white; }
+        .map-guru   { background: #e85d04; color: white; }
+
+        footer { font-size: 0.7rem; text-align: center; padding: 1rem; border-top: 1px solid #e2edf2; background: #fefefe; color: #6b8c9c; }
+        @media (max-width: 700px) { .content { padding: 1rem; } .attraction-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="header">
+        <h1>🏛️ Tourist Attractions · Smart Search · 8 Directions</h1>
+        <p>Temples · Ghats · Forts · Museums · Nature · Beaches · Viewpoints · Monuments · Art · Sports · Heritage · and more — up to 20 km</p>
+    </div>
+    <div class="content">
+        <div class="panel">
+            <div class="flex-row">
+                <div class="input-area">
+                    <label>📍 Location — Plus Code, short code, coordinates, city name</label>
+                    <div class="input-wrap">
+                        <textarea id="locationInput" rows="2" placeholder="Examples: 5QGG+WRP Ujjain | 8FVC+X8 Ahmedabad | 23.1773,75.7771 | Ujjain, Madhya Pradesh | New Delhi | Mumbai"></textarea>
+                        <button id="clearBtn" class="btn-clear" title="Clear location">✕</button>
+                    </div>
+                </div>
+                <div class="radius-area">
+                    <label>📏 Radius (km) — max 20 km</label>
+                    <input type="number" id="radiusKm" value="10" step="1" min="1" max="20">
+                </div>
+                <div class="btn-group">
+                    <button id="searchBtn">🔍 Find Attractions</button>
+                    <button id="myLocBtn" class="btn-outline">📍 My Location</button>
+                </div>
+            </div>
+
+            <div class="category-row">
+                <span style="font-size:0.7rem;font-weight:600;color:#4a7060;">Filter:</span>
+                <span class="cat-btn active" data-cat="all">🌐 All</span>
+                <span class="cat-btn" data-cat="temple">🛕 Temples &amp; Worship</span>
+                <span class="cat-btn" data-cat="ghat">🌊 Ghats &amp; Riverfront</span>
+                <span class="cat-btn" data-cat="historic">🏛️ Historic &amp; Monuments</span>
+                <span class="cat-btn" data-cat="museum">🏺 Museums &amp; Galleries</span>
+                <span class="cat-btn" data-cat="natural">🏞️ Parks &amp; Nature</span>
+                <span class="cat-btn" data-cat="viewpoint">👁️ Viewpoints</span>
+                <span class="cat-btn" data-cat="beach">🏖️ Beaches &amp; Islands</span>
+                <span class="cat-btn" data-cat="mountain">⛰️ Hills &amp; Peaks</span>
+                <span class="cat-btn" data-cat="forest">🌳 Forests &amp; Reserves</span>
+                <span class="cat-btn" data-cat="zoo">🦁 Zoos &amp; Aquaria</span>
+                <span class="cat-btn" data-cat="botanical">🌸 Gardens &amp; Botanical</span>
+                <span class="cat-btn" data-cat="fort">🏰 Forts &amp; Palaces</span>
+                <span class="cat-btn" data-cat="bridge">🌉 Bridges &amp; Structures</span>
+                <span class="cat-btn" data-cat="theme_park">🎡 Theme Parks</span>
+                <span class="cat-btn" data-cat="artwork">🗿 Sculptures &amp; Art</span>
+                <span class="cat-btn" data-cat="entertainment">🎭 Theatre &amp; Cinema</span>
+                <span class="cat-btn" data-cat="sports">⚽ Sports Venues</span>
+                <span class="cat-btn" data-cat="heritage_train">🚂 Heritage &amp; Craft</span>
+                <span class="cat-btn" data-cat="cemetery">🪦 Tombs &amp; Cemeteries</span>
+            </div>
+
+            <div id="statusMsg" class="status">💡 Ready — enter any location and choose up to 20 km radius. Auto-retry reduces by 1 km if needed.</div>
+        </div>
+
+        <div id="resultsArea" style="display:none;"></div>
+    </div>
+    <footer>🗺️ Data: OpenStreetMap / Overpass API · Photos: Wikimedia Commons · Auto-retry on timeout or no results (−1 km each time)</footer>
+</div>
+
+<script>
+// ── Self-contained Plus Code (OLC) decoder — no CDN dependency ──
+const OpenLocationCode = (() => {
+    const A = '23456789CFGHJMPQRVWX';
+    const B = 20;
+
+    function isValid(code) {
+        const uc = code.toUpperCase();
+        const p = uc.indexOf('+');
+        if (p < 2 || p > 8 || uc.length < p + 2) return false;
+        for (const c of uc.replace('+','')) { if (A.indexOf(c) < 0) return false; }
+        return true;
+    }
+
+    function isFull(code) {
+        return code.toUpperCase().indexOf('+') === 8;
+    }
+
+    function decode(code) {
+        if (!isFull(code)) throw new Error('Not a full Plus Code: ' + code);
+        const UC = code.toUpperCase().replace('+', '');
+        let lonRes = 360.0 / B, latRes = 180.0 / B;
+        let lonLo = -180.0 + A.indexOf(UC[0]) * lonRes;
+        let latLo =  -90.0 + A.indexOf(UC[1]) * latRes;
+        for (let i = 2; i < UC.length && i < 10; i += 2) {
+            lonRes /= B; latRes /= B;
+            lonLo += A.indexOf(UC[i])   * lonRes;
+            latLo += A.indexOf(UC[i+1]) * latRes;
+        }
+        return { latitudeCenter: latLo + latRes / 2, longitudeCenter: lonLo + lonRes / 2 };
+    }
+
+    function recoverNearest(shortCode, refLat, refLon) {
+        const UC = shortCode.toUpperCase();
+        const plusAt = UC.indexOf('+');
+        const padLen = 8 - plusAt;
+        let latV = refLat + 90, lonV = refLon + 180;
+        let latR = 180.0, lonR = 360.0;
+        let prefix = '';
+        while (prefix.length < padLen) {
+            lonR /= B; latR /= B;
+            const li = Math.floor(lonV / lonR) % B;
+            const ai = Math.floor(latV / latR) % B;
+            prefix += A[li];
+            lonV -= li * lonR;
+            if (prefix.length < padLen) { prefix += A[ai]; latV -= ai * latR; }
+        }
+        return prefix + UC;
+    }
+
+    return { isValid, isFull, decode, recoverNearest };
+})();
+
+// ── Guru Maps deep link opener ───────────────────────────────
+function openGuruMaps(lat, lon, name) {
+    try {
+        // Create an invisible iframe to trigger the URL scheme without navigating away
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'display:none;width:0;height:0;border:0;';
+        document.body.appendChild(iframe);
+        iframe.src = `guru://show?place=${lat},${lon}`;
+        setTimeout(() => {
+            try { document.body.removeChild(iframe); } catch(e) {}
+        }, 2000);
+    } catch(e) {
+        // Fallback: try window.location
+        window.location.href = `guru://show?place=${lat},${lon}`;
+    }
+}
+</script>
+
+<script>
+// ── DOM refs ──────────────────────────────────────────────────
+const locationInput = document.getElementById('locationInput');
+const radiusInput   = document.getElementById('radiusKm');
+const searchBtn     = document.getElementById('searchBtn');
+const myLocBtn      = document.getElementById('myLocBtn');
+const statusDiv     = document.getElementById('statusMsg');
+const resultsArea   = document.getElementById('resultsArea');
+
+let currentAttractions = [];
+let activeCategory = 'all';
+
+// ── Category filter buttons ───────────────────────────────────
+document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCategory = btn.dataset.cat;
+        if (currentAttractions.length) applyCategoryFilter();
+    });
+});
+
+function applyCategoryFilter() {
+    const filtered = activeCategory === 'all'
+        ? currentAttractions
+        : currentAttractions.filter(a => a.category === activeCategory);
+    if (!filtered.length) {
+        setStatus(`No "${activeCategory}" attractions found in this area.`, 'warn');
+        renderGroupedFromList([]);
+        return;
+    }
+    renderGroupedFromList(filtered);
+    if (activeCategory !== 'all')
+        setStatus(`Showing ${filtered.length} "${activeCategory}" attractions.`);
+}
+
+// ── Status helper ─────────────────────────────────────────────
+function setStatus(msg, type, isLoading) {
+    statusDiv.className = 'status' + (type === 'error' ? ' error' : type === 'warn' ? ' warn' : '');
+    statusDiv.innerHTML = isLoading ? `<span class="loader"></span> ${msg}` : msg;
+}
+
+// ── Location resolution ───────────────────────────────────────
+function extractPlusCode(raw) {
+    if (typeof OpenLocationCode === 'undefined') return null;
+    const m = raw.match(/\b([A-Z0-9]{2,}\+[A-Z0-9]+)\b/i);
+    if (!m) return null;
+    const code = m[1].toUpperCase();
+    try { if (OpenLocationCode.isValid(code)) return code; } catch(e) {}
+    return null;
+}
+
+function parseCoordinates(text) {
+    const cleaned = text.replace(/[()\[\]]/g, ' ').trim();
+    const patterns = [
+        /(-?\d+(?:\.\d+)?)\s*[,;]\s*(-?\d+(?:\.\d+)?)/,
+        /(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/
+    ];
+    for (const p of patterns) {
+        const m = cleaned.match(p);
+        if (m) {
+            const lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+            if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180)
+                return { lat, lon };
+        }
+    }
+    return null;
+}
+
+// ── Geocoding with rate-limit handling + fallback ────────────
+const _geocodeCache = new Map();
+let _lastNominatimCall = 0;
+
+async function geocode(query) {
+    const key = query.trim().toLowerCase();
+    if (_geocodeCache.has(key)) return _geocodeCache.get(key);
+
+    const now = Date.now();
+    const wait = Math.max(0, 1100 - (now - _lastNominatimCall));
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    _lastNominatimCall = Date.now();
+
+    try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 9000);
+        const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'TouristAttractions/3.0' }, signal: ctrl.signal });
+        clearTimeout(tid);
+        if (res.status === 429) {
+            await new Promise(r => setTimeout(r, 2000));
+            return await geocodeFallback(query);
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data && data.length) {
+            const result = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+            _geocodeCache.set(key, result);
+            return result;
+        }
+        return null;
+    } catch(err) {
+        try { return await geocodeFallback(query); } catch(e2) { return null; }
+    }
+}
+
+async function geocodeFallback(query) {
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`;
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 9000);
+    try {
+        const res = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(tid);
+        if (!res.ok) throw new Error(`Photon HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.features && data.features.length) {
+            const [lon, lat] = data.features[0].geometry.coordinates;
+            const result = { lat, lon };
+            _geocodeCache.set(query.trim().toLowerCase(), result);
+            return result;
+        }
+        return null;
+    } catch(err) { clearTimeout(tid); throw err; }
+}
+
+async function resolveLocation(raw) {
+    if (!raw || !raw.trim()) return null;
+    const input = raw.trim();
+
+    const coords = parseCoordinates(input);
+    if (coords) return coords;
+
+    const plusCodeMatch = input.match(/([A-Z2-9]{2,8}\+[A-Z2-9]{2,8})/i);
+    if (plusCodeMatch) {
+        const code = plusCodeMatch[1].toUpperCase();
+        const prefixLen = code.indexOf('+');
+
+        if (prefixLen >= 8) {
+            try {
+                const decoded = OpenLocationCode.decode(code);
+                if (decoded && decoded.latitudeCenter != null && decoded.longitudeCenter != null)
+                    return { lat: decoded.latitudeCenter, lon: decoded.longitudeCenter };
+            } catch(e) { console.warn('OLC decode error:', e.message); }
+        }
+
+        const locality = input.replace(plusCodeMatch[1], '').replace(/[,;\s]+/g, ' ').trim();
+
+        if (locality) {
+            setStatus(`🌍 Resolving short Plus Code with "${locality}"...`, null, true);
+            try {
+                const refLoc = await geocode(locality);
+                if (refLoc) {
+                    const fullCode = OpenLocationCode.recoverNearest(code, refLoc.lat, refLoc.lon);
+                    const decoded = OpenLocationCode.decode(fullCode);
+                    return { lat: decoded.latitudeCenter, lon: decoded.longitudeCenter };
+                }
+            } catch(e) {}
+        } else {
+            setStatus(`🌍 Looking up Plus Code "${code}"...`, null, true);
+            try {
+                const result = await geocodeFallback(code);
+                if (result) return result;
+            } catch(e) {}
+            throw new Error(`Short Plus Code "${code}" needs a city name. Example: "${code} Ahmedabad" or "${code} Mumbai"`);
+        }
+
+        throw new Error(`Could not resolve Plus Code "${code}". Try adding a city name, e.g. "${code} Ahmedabad"`);
+    }
+
+    setStatus(`🌍 Geocoding "${input.substring(0, 50)}"...`, null, true);
+    const geo = await geocode(input);
+    if (geo) return geo;
+    throw new Error(`Cannot locate "${input}". Try coordinates like "23.17,75.77" or a city name.`);
+}
+
+// ── Overpass query ───────────────────────────────────────────
+async function fetchAttractions(lat, lon, radiusKm) {
+    const radiusM = radiusKm * 1000;
+    const query = `[out:json][timeout:28];
+(
+  node(around:${radiusM},${lat},${lon})["tourism"];
+  way(around:${radiusM},${lat},${lon})["tourism"];
+  node(around:${radiusM},${lat},${lon})["historic"];
+  way(around:${radiusM},${lat},${lon})["historic"];
+  node(around:${radiusM},${lat},${lon})["amenity"="place_of_worship"];
+  way(around:${radiusM},${lat},${lon})["amenity"="place_of_worship"];
+  node(around:${radiusM},${lat},${lon})["amenity"="museum"];
+  way(around:${radiusM},${lat},${lon})["amenity"="museum"];
+  node(around:${radiusM},${lat},${lon})["amenity"="theatre"];
+  way(around:${radiusM},${lat},${lon})["amenity"="theatre"];
+  node(around:${radiusM},${lat},${lon})["amenity"="cinema"];
+  way(around:${radiusM},${lat},${lon})["amenity"="cinema"];
+  node(around:${radiusM},${lat},${lon})["amenity"="zoo"];
+  way(around:${radiusM},${lat},${lon})["amenity"="zoo"];
+  node(around:${radiusM},${lat},${lon})["amenity"="aquarium"];
+  way(around:${radiusM},${lat},${lon})["amenity"="aquarium"];
+  node(around:${radiusM},${lat},${lon})["amenity"="library"];
+  way(around:${radiusM},${lat},${lon})["amenity"="library"];
+  node(around:${radiusM},${lat},${lon})["amenity"="arts_centre"];
+  way(around:${radiusM},${lat},${lon})["amenity"="arts_centre"];
+  node(around:${radiusM},${lat},${lon})["leisure"~"park|garden|nature_reserve|stadium|water_park|marina|beach_resort"];
+  way(around:${radiusM},${lat},${lon})["leisure"~"park|garden|nature_reserve|stadium|water_park|marina|beach_resort"];
+  node(around:${radiusM},${lat},${lon})["natural"~"beach|peak|cliff|cave_entrance|hot_spring|waterfall|volcano"];
+  way(around:${radiusM},${lat},${lon})["natural"~"beach|peak|cliff|cave_entrance|hot_spring|waterfall|volcano"];
+  node(around:${radiusM},${lat},${lon})["man_made"="ghat"];
+  way(around:${radiusM},${lat},${lon})["man_made"="ghat"];
+  node(around:${radiusM},${lat},${lon})["ghat"];
+  way(around:${radiusM},${lat},${lon})["ghat"];
+  node(around:${radiusM},${lat},${lon})["memorial"];
+  way(around:${radiusM},${lat},${lon})["memorial"];
+  node(around:${radiusM},${lat},${lon})["statue"];
+  way(around:${radiusM},${lat},${lon})["statue"];
+  node(around:${radiusM},${lat},${lon})["man_made"~"lighthouse|windmill|pier|tower|obelisk|monument"];
+  way(around:${radiusM},${lat},${lon})["man_made"~"lighthouse|windmill|pier|tower|obelisk|monument"];
+  node(around:${radiusM},${lat},${lon})["tourism"="viewpoint"];
+  way(around:${radiusM},${lat},${lon})["tourism"="viewpoint"];
+  node(around:${radiusM},${lat},${lon})["tourism"="theme_park"];
+  way(around:${radiusM},${lat},${lon})["tourism"="theme_park"];
+  node(around:${radiusM},${lat},${lon})["heritage"];
+  way(around:${radiusM},${lat},${lon})["heritage"];
+  node(around:${radiusM},${lat},${lon})["sport"];
+  way(around:${radiusM},${lat},${lon})["sport"];
+  node(around:${radiusM},${lat},${lon})["craft"~"pottery|weaving|jeweller|sculptor|textile"];
+  way(around:${radiusM},${lat},${lon})["craft"~"pottery|weaving|jeweller|sculptor|textile"];
+  node(around:${radiusM},${lat},${lon})["landuse"="cemetery"];
+  way(around:${radiusM},${lat},${lon})["landuse"="cemetery"];
+);
+out center;`;
+
+    const endpoint = 'https://overpass-api.de/api/interpreter';
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 31000);
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            body: `data=${encodeURIComponent(query)}`,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            signal: ctrl.signal
+        });
+        clearTimeout(tid);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return data.elements || [];
+    } catch(err) {
+        clearTimeout(tid);
+        throw err;
+    }
+}
+
+// ── Category classifier ───────────────────────────────────────
+function getCategory(tags) {
+    if (!tags) return 'other';
+    const t = tags.tourism, h = tags.historic, a = tags.amenity,
+          l = tags.leisure, n = tags.natural, m = tags.man_made;
+
+    if (a === 'place_of_worship') return 'temple';
+    if (h === 'temple' || h === 'mosque' || h === 'church' || h === 'monastery' || h === 'shrine' || h === 'wayside_shrine') return 'temple';
+    if (tags.religion) return 'temple';
+    if (tags.ghat || m === 'ghat') return 'ghat';
+    if (m === 'pier') return 'ghat';
+    if (a === 'museum' || t === 'museum' || a === 'arts_centre' || t === 'gallery') return 'museum';
+    if (n === 'beach' || t === 'beach_resort' || l === 'beach_resort' || l === 'marina') return 'beach';
+    if (n === 'peak' || n === 'cliff' || n === 'volcano' || n === 'cave_entrance' || n === 'hot_spring') return 'mountain';
+    if (l === 'nature_reserve' || t === 'nature_reserve') return 'forest';
+    if (n === 'wood' || n === 'wetland') return 'forest';
+    if (a === 'zoo' || t === 'zoo' || a === 'aquarium' || t === 'aquarium') return 'zoo';
+    if (l === 'garden' || t === 'garden' || h === 'garden') return 'botanical';
+    if (h === 'fort' || h === 'castle' || h === 'palace' || h === 'manor' || h === 'citadel' || h === 'city_gate') return 'fort';
+    if (t === 'castle') return 'fort';
+    if (h === 'bridge' || tags.bridge) return 'bridge';
+    if (m === 'lighthouse' || m === 'windmill' || m === 'obelisk' || m === 'tower') return 'bridge';
+    if (t === 'theme_park' || t === 'amusement_park' || l === 'water_park') return 'theme_park';
+    if (t === 'artwork' || tags.artwork_type) return 'artwork';
+    if (tags.memorial || tags.statue || h === 'memorial' || h === 'monument' || h === 'statue') return 'artwork';
+    if (m === 'monument' || m === 'obelisk') return 'artwork';
+    if (a === 'theatre' || t === 'theatre' || a === 'cinema' || a === 'nightclub') return 'entertainment';
+    if (a === 'arts_centre' || a === 'community_centre') return 'entertainment';
+    if (tags.sport || l === 'stadium' || l === 'track') return 'sports';
+    if (tags.craft) return 'heritage_train';
+    if (h === 'industrial' || h === 'mine') return 'heritage_train';
+    if (a === 'library') return 'heritage_train';
+    if (tags.landuse === 'cemetery' || h === 'tomb' || h === 'grave_yard' || a === 'grave_yard') return 'cemetery';
+    if (l === 'park' || t === 'park' || n === 'waterfall') return 'natural';
+    if (t === 'viewpoint') return 'viewpoint';
+    if (h === 'archaeological_site' || h === 'ruins' || h === 'battlefield' || h === 'prison') return 'historic';
+    if (h) return 'historic';
+    if (t === 'attraction' || t === 'tourist_attraction') return 'historic';
+    if (t) return 'historic';
+    return 'other';
+}
+
+const CAT_META = {
+    temple:        { label: 'Temple/Religious',  emoji: '🛕' },
+    ghat:          { label: 'Ghat/Riverfront',   emoji: '🌊' },
+    historic:      { label: 'Historic/Monument', emoji: '🏛️' },
+    museum:        { label: 'Museum/Gallery',     emoji: '🏺' },
+    natural:       { label: 'Nature/Park',        emoji: '🏞️' },
+    viewpoint:     { label: 'Viewpoint',          emoji: '👁️' },
+    beach:         { label: 'Beach/Island',       emoji: '🏖️' },
+    mountain:      { label: 'Hill/Peak',          emoji: '⛰️' },
+    forest:        { label: 'Forest/Reserve',     emoji: '🌳' },
+    zoo:           { label: 'Zoo/Aquarium',       emoji: '🦁' },
+    botanical:     { label: 'Garden/Botanical',   emoji: '🌸' },
+    fort:          { label: 'Fort/Palace',        emoji: '🏰' },
+    bridge:        { label: 'Bridge/Structure',   emoji: '🌉' },
+    theme_park:    { label: 'Theme Park',         emoji: '🎡' },
+    artwork:       { label: 'Sculpture/Art',      emoji: '🗿' },
+    entertainment: { label: 'Theatre/Cinema',     emoji: '🎭' },
+    sports:        { label: 'Sports Venue',       emoji: '⚽' },
+    heritage_train:{ label: 'Heritage/Craft',     emoji: '🚂' },
+    cemetery:      { label: 'Tomb/Cemetery',      emoji: '🪦' },
+    other:         { label: 'Attraction',         emoji: '📍' },
+};
+
+const DIR_FULL  = { N:'North', NE:'Northeast', E:'East', SE:'Southeast', S:'South', SW:'Southwest', W:'West', NW:'Northwest' };
+const DIR_EMOJI = { N:'⬆️', NE:'↗️', E:'➡️', SE:'↘️', S:'⬇️', SW:'↙️', W:'⬅️', NW:'↖️' };
+
+// ── Geo helpers ───────────────────────────────────────────────
+function haversine(lat1, lon1, lat2, lon2) {
+    const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+    const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function getBearing(lat1,lon1,lat2,lon2) {
+    const f1=lat1*Math.PI/180,f2=lat2*Math.PI/180,dl=(lon2-lon1)*Math.PI/180;
+    const y=Math.sin(dl)*Math.cos(f2), x=Math.cos(f1)*Math.sin(f2)-Math.sin(f1)*Math.cos(f2)*Math.cos(dl);
+    return (Math.atan2(y,x)*180/Math.PI+360)%360;
+}
+function bearingToCardinal(b) {
+    return ["N","NE","E","SE","S","SW","W","NW"][Math.round(b/45)%8];
+}
+
+// ── Process OSM elements ──────────────────────────────────────
+function processElements(elements, cLat, cLon) {
+    const raw = [];
+    for (const el of elements) {
+        let lat, lon;
+        if (el.type === 'node') { lat=el.lat; lon=el.lon; }
+        else if (el.type === 'way' && el.center) { lat=el.center.lat; lon=el.center.lon; }
+        else continue;
+        if (lat == null || lon == null) continue;
+
+        const tags = el.tags || {};
+        let name = tags.name || tags['name:en'] || tags['name:hi'];
+        if (!name) {
+            if (tags.tourism && tags.tourism !== 'yes') name = tags.tourism.replace(/_/g,' ');
+            else if (tags.historic && tags.historic !== 'yes') name = tags.historic.replace(/_/g,' ');
+            else if (tags.amenity === 'place_of_worship') name = 'Place of Worship';
+            else if (tags.ghat || tags.man_made === 'ghat') name = 'Ghat';
+            else if (tags.memorial) name = 'Memorial';
+            else if (tags.natural === 'beach') name = 'Beach';
+            else if (tags.natural === 'peak') name = 'Peak';
+            else continue;
+        }
+        name = name.trim();
+        name = name.charAt(0).toUpperCase() + name.slice(1);
+
+        const distance = haversine(cLat, cLon, lat, lon);
+        if (distance < 0.02) continue;
+        const bearing = getBearing(cLat, cLon, lat, lon);
+        const category = getCategory(tags);
+
+        raw.push({ id:`${el.type}_${el.id}`, name, lat, lon, distance, bearing, direction:bearingToCardinal(bearing), category });
+    }
+    const unique = new Map();
+    raw.forEach(a => unique.set(a.id, a));
+    return Array.from(unique.values()).sort((a,b) => a.distance - b.distance);
+}
+
+// ── Photo fetch ───────────────────────────────────────────────
+async function fetchPhoto(placeName) {
+    if (!placeName || placeName.length < 4) return null;
+    const term = encodeURIComponent(placeName.split('(')[0].trim());
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${term}&gsrlimit=1&prop=pageimages&pithumbsize=300&format=json&origin=*`;
+    try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4000);
+        const res = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(tid);
+        const data = await res.json();
+        const pages = data.query?.pages;
+        if (pages) {
+            const first = Object.values(pages)[0];
+            if (first?.thumbnail?.source) return first.thumbnail.source;
+        }
+    } catch(e) {}
+    return null;
+}
+
+// ── Map links ─────────────────────────────────────────────────
+function gLink(lat,lon)  { return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`; }
+function aLink(lat,lon,n){ return `https://maps.apple.com/?ll=${lat},${lon}&q=${encodeURIComponent(n)}`; }
+
+// ── Escape HTML ───────────────────────────────────────────────
+function esc(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+// ── Render grouped results ────────────────────────────────────
+let renderToken = 0;
+
+// Add a single delegated event listener for Guru Maps buttons (avoid javascript: URLs)
+resultsArea.addEventListener('click', (e) => {
+    const guruBtn = e.target.closest('.map-guru');
+    if (guruBtn && guruBtn.classList.contains('map-guru')) {
+        e.preventDefault();
+        const lat = parseFloat(guruBtn.getAttribute('data-lat'));
+        const lon = parseFloat(guruBtn.getAttribute('data-lon'));
+        const name = guruBtn.getAttribute('data-name') || '';
+        if (!isNaN(lat) && !isNaN(lon)) {
+            openGuruMaps(lat, lon, name);
+        } else {
+            console.warn('Invalid coordinates for Guru Maps');
+        }
+    }
+});
+
+async function renderGroupedFromList(attractions) {
+    const myToken = ++renderToken;
+
+    if (!attractions.length) {
+        resultsArea.innerHTML = `<div class="status">🏞️ No attractions found.</div>`;
+        resultsArea.style.display = 'block';
+        return;
+    }
+
+    const groups = { N:[], NE:[], E:[], SE:[], S:[], SW:[], W:[], NW:[] };
+    attractions.forEach(a => { if (groups[a.direction]) groups[a.direction].push(a); });
+
+    buildAndSetHTML(attractions, groups, new Map(), myToken);
+
+    for (let i = 0; i < attractions.length; i++) {
+        if (renderToken !== myToken) return;
+        if (!attractions[i].photoUrl) {
+            attractions[i].photoUrl = await fetchPhoto(attractions[i].name);
+        }
+        if (i % 5 === 0 || i === attractions.length - 1) {
+            if (renderToken !== myToken) return;
+            buildAndSetHTML(attractions, groups, new Map(attractions.map(a => [a.id, a.photoUrl])), myToken);
+        }
+    }
+}
+
+function buildAndSetHTML(attractions, groups, photoMap, myToken) {
+    if (renderToken !== myToken) return;
+
+    const dirOrder = ["N","NE","E","SE","S","SW","W","NW"];
+
+    const exportHtml = `<div class="export-bar">
+        <div class="export-info">
+            <strong>${attractions.length}</strong> attractions found · Google Maps, Apple Maps &amp; Guru Maps links included
+        </div>
+        <div class="export-btns">
+            <button class="btn-excel" onclick="exportExcel()">📊 Export to Excel</button>
+            <button class="btn-outline" onclick="copyList()">📋 Copy List</button>
+        </div>
+    </div>`;
+
+    let sectionsHtml = '';
+    for (const dir of dirOrder) {
+        const items = groups[dir] || [];
+        if (!items.length) continue;
+        sectionsHtml += `<div class="compass-section">
+            <div class="compass-header">
+                <div class="compass-header-left">
+                    <span>${DIR_EMOJI[dir]}</span>
+                    <span>${dir} — ${DIR_FULL[dir]}</span>
+                </div>
+                <span class="compass-badge">${items.length} place${items.length > 1 ? 's' : ''}</span>
+            </div>
+            <div class="attraction-grid">`;
+        for (const att of items) {
+            const photo = photoMap.get(att.id);
+            const meta  = CAT_META[att.category] || CAT_META.other;
+            const photoHtml = photo
+                ? `<img src="${esc(photo)}" alt="${esc(att.name)}" loading="lazy">`
+                : `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">${meta.emoji}<span style="font-size:0.65rem;color:#8ba3ae;">${esc(meta.label)}</span></div>`;
+            sectionsHtml += `<div class="card">
+                <div class="card-img">
+                    ${photoHtml}
+                    <span class="cat-pill">${meta.emoji} ${esc(meta.label)}</span>
+                </div>
+                <div class="card-body">
+                    <div class="place-name">${esc(att.name)}</div>
+                    <div class="meta-info">
+                        <span class="meta-chip">📏 ${att.distance.toFixed(2)} km</span>
+                        <span class="meta-chip">🎯 ${att.bearing.toFixed(0)}°</span>
+                    </div>
+                    <div class="map-links">
+                        <a href="${gLink(att.lat,att.lon)}" target="_blank" class="map-btn map-google">🗺️ Google</a>
+                        <a href="${aLink(att.lat,att.lon,att.name)}" target="_blank" class="map-btn map-apple">🍎 Apple</a>
+                        <a href="#" class="map-btn map-guru" data-lat="${att.lat}" data-lon="${att.lon}" data-name="${esc(att.name)}">🧭 Guru</a>
+                    </div>
+                </div>
+            </div>`;
+        }
+        sectionsHtml += `</div></div>`;
+    }
+    if (!sectionsHtml) sectionsHtml = `<div class="status">No attractions in any direction.</div>`;
+
+    resultsArea.innerHTML = exportHtml + sectionsHtml;
+    resultsArea.style.display = 'block';
+}
+
+// ── Excel export (SheetJS) ────────────────────────────────────
+function loadXLSX(cb) {
+    if (window.XLSX) { cb(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = cb;
+    s.onerror = () => alert('Could not load Excel library. Check internet connection.');
+    document.head.appendChild(s);
+}
+
+function exportExcel() {
+    loadXLSX(() => {
+        const rows = currentAttractions.map(a => {
+            const meta = CAT_META[a.category] || CAT_META.other;
+            return {
+                'Name':            a.name,
+                'Category':        meta.label,
+                'Direction':       a.direction,
+                'Full Direction':  DIR_FULL[a.direction] || a.direction,
+                'Distance (km)':   +a.distance.toFixed(3),
+                'Bearing (°)':     +a.bearing.toFixed(1),
+                'Latitude':        a.lat,
+                'Longitude':       a.lon,
+                'Google Maps':     gLink(a.lat, a.lon),
+                'Apple Maps':      aLink(a.lat, a.lon, a.name),
+                'Guru Maps':       `guru://show?place=${a.lat},${a.lon}`,
+            };
+        });
+        const wb = XLSX.utils.book_new();
+        const ws1 = XLSX.utils.json_to_sheet(rows);
+        ws1['!cols'] = [{wch:40},{wch:22},{wch:10},{wch:14},{wch:14},{wch:12},{wch:14},{wch:14},{wch:55},{wch:55},{wch:55}];
+        XLSX.utils.book_append_sheet(wb, ws1, 'All Attractions');
+
+        const dirSummary = ["N","NE","E","SE","S","SW","W","NW"].map(dir => {
+            const it = currentAttractions.filter(a => a.direction === dir);
+            return {
+                'Direction': dir, 'Full Name': DIR_FULL[dir],
+                'Count': it.length,
+                'Nearest Place': it[0]?.name || '—',
+                'Nearest (km)':  it[0] ? +it[0].distance.toFixed(3) : '—',
+            };
+        });
+        const ws2 = XLSX.utils.json_to_sheet(dirSummary);
+        ws2['!cols'] = [{wch:10},{wch:14},{wch:8},{wch:40},{wch:14}];
+        XLSX.utils.book_append_sheet(wb, ws2, 'By Direction');
+
+        const cats = [...new Set(currentAttractions.map(a => a.category))];
+        const catSummary = cats.map(cat => {
+            const it = currentAttractions.filter(a => a.category === cat);
+            const meta = CAT_META[cat] || CAT_META.other;
+            return {
+                'Category': meta.label, 'Count': it.length,
+                'Nearest': it[0]?.name || '—',
+                'Nearest (km)': it[0] ? +it[0].distance.toFixed(3) : '—',
+            };
+        });
+        const ws3 = XLSX.utils.json_to_sheet(catSummary);
+        ws3['!cols'] = [{wch:24},{wch:8},{wch:40},{wch:14}];
+        XLSX.utils.book_append_sheet(wb, ws3, 'By Category');
+
+        const fname = `Tourist_Attractions_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, fname);
+        setStatus(`✅ Excel downloaded: <strong>${fname}</strong> — 3 sheets with all map links.`);
+    });
+}
+
+function copyList() {
+    const lines = currentAttractions.map((a,i) => {
+        const meta = CAT_META[a.category] || CAT_META.other;
+        return `${i+1}. ${a.name} | ${meta.label} | ${a.direction} | ${a.distance.toFixed(2)} km | ${gLink(a.lat,a.lon)}`;
+    });
+    navigator.clipboard.writeText(lines.join('\n'))
+        .then(() => setStatus(`✅ Copied ${currentAttractions.length} attractions to clipboard.`))
+        .catch(() => setStatus(`⚠️ Clipboard unavailable — use Export to Excel instead.`, 'warn'));
+}
+
+// ── Main search with auto-retry ──────────────────────────────
+async function performSearch(locationQuery, radiusKm, originalRadius) {
+    originalRadius = originalRadius ?? radiusKm;
+    const isRetry = radiusKm < originalRadius;
+
+    if (!isRetry) {
+        renderToken++;
+        currentAttractions = [];
+        resultsArea.style.display = 'none';
+        resultsArea.innerHTML = '';
+    }
+
+    let center;
+    try {
+        center = await resolveLocation(locationQuery);
+        if (!center) throw new Error('Could not resolve location');
+        setStatus(`📍 Center: ${center.lat.toFixed(5)}, ${center.lon.toFixed(5)}`);
+    } catch(err) {
+        setStatus(`❌ ${err.message}`, 'error');
+        return;
+    }
+
+    const retryNote = isRetry ? ` (auto-reduced from ${originalRadius} km → ${radiusKm} km)` : '';
+    setStatus(`🔍 Searching within ${radiusKm} km${retryNote}...`, null, true);
+
+    try {
+        const elements = await fetchAttractions(center.lat, center.lon, radiusKm);
+        const attractions = processElements(elements, center.lat, center.lon);
+
+        if (!attractions.length) {
+            if (radiusKm > 1) {
+                const next = radiusKm - 1;
+                setStatus(`⚠️ No results at ${radiusKm} km — auto-reducing to ${next} km...`, 'warn', true);
+                setTimeout(() => performSearch(locationQuery, next, originalRadius), 800);
+            } else {
+                setStatus(`❌ No attractions found even at 1 km. Try a different location.`, 'error');
+            }
+            return;
+        }
+
+        currentAttractions = attractions;
+        const note = isRetry ? ` ⚠️ Radius auto-reduced from ${originalRadius} km to ${radiusKm} km.` : '';
+        setStatus(`✅ Found <strong>${attractions.length}</strong> attractions within <strong>${radiusKm} km</strong>.${note} Loading photos…`);
+        await renderGroupedFromList(attractions);
+        setStatus(`✨ <strong>${attractions.length}</strong> places found at <strong>${radiusKm} km</strong>.${note} Filter by category above or export to Excel.`);
+
+    } catch(err) {
+        console.error(err);
+        const isTimeout = err.name === 'AbortError' || err.message.includes('timeout') || err.message.includes('504') || err.message.includes('abort');
+        if (isTimeout && radiusKm > 1) {
+            const next = radiusKm - 1;
+            setStatus(`⏱️ Timeout at ${radiusKm} km — auto-reducing to ${next} km...`, 'warn', true);
+            setTimeout(() => performSearch(locationQuery, next, originalRadius), 1000);
+        } else {
+            setStatus(`❌ Error: ${err.message}`, 'error');
+        }
+    }
+}
+
+// ── Current location ──────────────────────────────────────────
+function useCurrentLocation() {
+    if (!navigator.geolocation) { setStatus('❌ Geolocation not supported', 'error'); return; }
+    setStatus('📍 Requesting your location…', null, true);
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            const lat = pos.coords.latitude, lon = pos.coords.longitude;
+            locationInput.value = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+            const r = parseFloat(radiusInput.value) || 10;
+            performSearch(locationInput.value, r);
+        },
+        err => setStatus(`❌ ${err.code === 1 ? 'Location permission denied.' : err.message}`, 'error'),
+        { timeout: 12000, enableHighAccuracy: true }
+    );
+}
+
+// ── Event listeners ───────────────────────────────────────────
+searchBtn.addEventListener('click', () => {
+    const q = locationInput.value.trim();
+    if (!q) { setStatus('⚠️ Please enter a location first.', 'warn'); return; }
+    let r = parseFloat(radiusInput.value);
+    if (isNaN(r) || r < 1)  r = 1;
+    if (r > 20) r = 20;
+    radiusInput.value = r;
+    performSearch(q, r);
+});
+myLocBtn.addEventListener('click', useCurrentLocation);
+document.getElementById('clearBtn').addEventListener('click', () => {
+    locationInput.value = '';
+    locationInput.focus();
+    setStatus('💡 Ready — enter a city, Plus Code, or coordinates.');
+});
+locationInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); searchBtn.click(); }
+});
+
+// Default
+locationInput.value = "Ujjain, Madhya Pradesh";
+setStatus("💡 Ready — enter a city, Plus Code, or coordinates. Max radius 20 km. Auto-retry reduces by 1 km on timeout or no results.");
+</script>
+</body>
+</html>
